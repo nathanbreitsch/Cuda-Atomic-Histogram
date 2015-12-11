@@ -49,7 +49,7 @@ __global__ void global_atomic_histogram(const Matrix image, Histogram hist){
   int index = row_index * image.column_count + column_index;
   int value = image.elements[index];
   int bin = value / hist.bin_width;
-  atomicAdd(&(image.elements[index]), hist.counts[bin]);
+  atomicAdd(&(hist.counts[bin]), image.elements[index]);
   __syncthreads();
 
 }
