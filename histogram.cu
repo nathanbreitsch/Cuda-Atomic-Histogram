@@ -46,7 +46,7 @@ int main(){
 __global__ void global_atomic_histogram(const Matrix image, Histogram hist){
   int row_index = blockIdx.y * blockDim.y + threadIdx.y;
   int column_index = blockIdx.x * blockDim.x + threadIdx.x;
-  if(row_index < image.row_count && col_index < image.column_count){
+  if(row_index < image.row_count && column_index < image.column_count){
     int index = row_index * image.column_count + column_index;
     int value = image.elements[index];
     int bin = value / hist.bin_width;
@@ -92,9 +92,13 @@ Histogram make_histogram(Matrix image){
   //step 4: copy image to device
   error = cudaMemcpy(image_d.elements, image.elements, image_size, cudaMemcpyHostToDevice);
   if(error != cudaSuccess){ printf("error copying matrix\n"); }
+  cudaMemcpy(&(image_d.row_count), &(image.row_count), image_size, cudaMemcpyHostToDevice);
+  cudaMemcpy(&(image_d.column_count), &(image.column_count), image_size, cudaMemcpyHostToDevice);
   //step 5: copy histogram zeros do device
   error = cudaMemcpy(hist_d.counts, hist.counts, hist_size, cudaMemcpyHostToDevice);
   if(error != cudaSuccess){ printf("error copying histogram\n"); }
+  cudaMemcpy(&(hist_d.bin_count), &(hist.bin_count), sizeof(int), cudaMemcpyHostToDevice);
+  cudaMemcpy(&(hist_d.bin_width), &(hist.bin_width), sizeof(int), cudaMemcpyHostToDevice);
 
   //step 4: launch kernel
 
