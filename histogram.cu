@@ -46,12 +46,13 @@ int main(){
 __global__ void global_atomic_histogram(const Matrix image, Histogram hist){
   int row_index = blockIdx.y * blockDim.y + threadIdx.y;
   int column_index = blockIdx.x * blockDim.x + threadIdx.x;
-  int index = row_index * image.column_count + column_index;
-  int value = image.elements[index];
-  int bin = value / hist.bin_width;
-  atomicAdd(&(hist.counts[bin]), image.elements[index]);
-  __syncthreads();
-
+  if(row_index < image.row_count && col_index < image.column_count){
+    int index = row_index * image.column_count + column_index;
+    int value = image.elements[index];
+    int bin = value / hist.bin_width;
+    atomicAdd(&(hist.counts[bin]), value);
+    __syncthreads();
+  }
 }
 
 //shared memory
@@ -127,7 +128,7 @@ Matrix random (int row_count, int column_count){
   result.column_count = column_count;
   result.elements = (int*) malloc(row_count * column_count * sizeof(int));
   for(int i = 0; i < row_count * column_count; i++){
-    result.elements[i] = rand() % 200;
+    result.elements[i] = rand() % 5;
   }
   return result;
 }
