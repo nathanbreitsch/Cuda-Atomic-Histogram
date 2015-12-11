@@ -44,7 +44,14 @@ int main(){
 
 //global memory
 __global__ void global_atomic_histogram(const Matrix image, Histogram hist){
-//todo
+  int row_index = blockIdx.y * blockDim.y + threadIdx.y;
+  int column_index = blockIdx.x * blockDim.x + threadIdx.x;
+  int index = row_index * image.column_count + column_index;
+  int value = image.elements[index];
+  int bin = value / hist.bin_width;
+  atomicAdd(&(image.elements[index]), hist.counts[bin]);
+  __syncthreads();
+
 }
 
 //shared memory
