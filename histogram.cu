@@ -1,7 +1,4 @@
-//question:
-//does contention for accessing global memory affect read performance?
-//for instance, n threads access each of the n rows in a column at the same time.
-//would it be faster for thread i to access row i % n first and proceed to i + j % n?
+
 
 #define TILE_WIDTH 32
 #define DIVIDE_ROUND_UP(a, b)((a + b - 1) / b)
