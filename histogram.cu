@@ -46,18 +46,61 @@ int main(){
 __global__ void global_atomic_histogram(const Matrix image, Histogram hist){
   int row_index = blockIdx.y * blockDim.y + threadIdx.y;
   int column_index = blockIdx.x * blockDim.x + threadIdx.x;
+  int index = row_index * image.column_count + column_index;
+
+
+  //initialize histogram
+  if(index < hist.bin_count){
+    hist.counts[index] = 0;
+  }
+
+  __syncthreads();
+
   if(row_index < image.row_count && column_index < image.column_count){
-    int index = row_index * image.column_count + column_index;
+
     int value = image.elements[index];
     int bin = value / hist.bin_width;
     atomicAdd(&(hist.counts[bin]), value);
-    __syncthreads();
   }
+  __syncthreads();
 }
 
 //shared memory
-__global__ void local_atomic_histogram(const Matrix image, Histogram hist){
-//todo:
+__global__ void shared_atomic_histogram(const Matrix image, Histogram hist){
+  __shared__ int* shared_hist[200];//warning: hard coded hist size
+  int row_index = blockIdx.y * blockDim.y + threadIdx.y;
+  int column_index = blockIdx.x * blockDim.x + threadIdx.x;
+  int index = row_index * image.column_count + column_index;
+  int shared_index = threadIdx.y * blockDim.x + threadIdx.x;
+
+
+  //initialize histogram
+  if(index < hist.bin_count){
+    hist.counts[index] = 0;
+  }
+
+  //initialize shared histogram
+  //as long as block_width^2 > 200, we're ok
+  if(shared_index < hist.bin_count){
+    shared_hist[shared_index] = 0;
+  }
+
+  __syncthreads();
+
+  if(row_index < image.row_count && column_index < image.column_count){
+
+    int value = image.elements[index];
+    int bin = value / 1;//hard coded
+    atomicAdd(shared_hist[bin], value);
+  }
+  __syncthreads();
+
+  //now do atomic adds to the global histogram
+  if(shared_index < hist.bin_count){
+    atomicAdd(&(hist.counts[shared_index]), &(shared_hist[shared_index]));
+  }
+
+  __syncthreads();
 }
 
 Histogram make_histogram(Matrix image){
