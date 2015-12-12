@@ -175,7 +175,7 @@ Matrix random (int row_count, int column_count){
   result.column_count = column_count;
   result.elements = (int*) malloc(row_count * column_count * sizeof(int));
   for(int i = 0; i < row_count * column_count; i++){
-    result.elements[i] = rand() % 5;
+    result.elements[i] = rand() % 200;
   }
   return result;
 }
