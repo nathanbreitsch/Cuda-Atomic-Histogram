@@ -147,7 +147,7 @@ Histogram make_histogram(Matrix image){
 
   dim3 block_dims(TILE_WIDTH, TILE_WIDTH);
   dim3 grid_dims(DIVIDE_ROUND_UP(image_d.column_count, block_dims.x), DIVIDE_ROUND_UP(image_d.row_count, block_dims.y));
-  global_atomic_histogram <<<grid_dims, block_dims>>> (image_d, hist_d);
+  shared_atomic_histogram <<<grid_dims, block_dims>>> (image_d, hist_d);
 
   //step 5: copy results back to host
   error = cudaMemcpy(hist.counts, hist_d.counts, hist_size, cudaMemcpyDeviceToHost);
