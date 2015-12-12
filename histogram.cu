@@ -67,7 +67,7 @@ __global__ void global_atomic_histogram(const Matrix image, Histogram hist){
 
 //shared memory
 __global__ void shared_atomic_histogram(const Matrix image, Histogram hist){
-  __shared__ int* shared_hist[200];//warning: hard coded hist size
+  __shared__ int shared_hist[200];//warning: hard coded hist size
   int row_index = blockIdx.y * blockDim.y + threadIdx.y;
   int column_index = blockIdx.x * blockDim.x + threadIdx.x;
   int index = row_index * image.column_count + column_index;
@@ -91,13 +91,13 @@ __global__ void shared_atomic_histogram(const Matrix image, Histogram hist){
 
     int value = image.elements[index];
     int bin = value / 1;//hard coded
-    atomicAdd(shared_hist[bin], value);
+    atomicAdd(&(shared_hist[bin]), value);
   }
   __syncthreads();
 
   //now do atomic adds to the global histogram
   if(shared_index < hist.bin_count){
-    atomicAdd(&(hist.counts[shared_index]), &(shared_hist[shared_index]));
+    atomicAdd(&(hist.counts[shared_index]), shared_hist[shared_index]);
   }
 
   __syncthreads();
